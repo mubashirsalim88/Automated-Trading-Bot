@@ -43,7 +43,6 @@ class CryptoTradingEnv(gym.Env):
         return np.hstack([obs, np.full((self.window_size, 1), prediction)])  # Add prediction as a feature
 
     def _ensemble_prediction(self, features):
-        # Convert the features array into a DataFrame with valid feature names
         feature_names = ['Open', 'High', 'Low', 'Close', 'Volume', 'RSI', 'MACD', 'SMA_50', 'SMA_200']
         features_df = pd.DataFrame([features], columns=feature_names)
         
@@ -53,7 +52,6 @@ class CryptoTradingEnv(gym.Env):
         avg_prediction = round(sum(predictions) / len(predictions))  # Majority vote
         avg_confidence = sum(confidences) / len(confidences)         # Average confidence
         return avg_prediction, avg_confidence
-
 
     def step(self, action):
         prev_state = self.data.iloc[self.current_step - 1]
@@ -75,3 +73,7 @@ class CryptoTradingEnv(gym.Env):
         self.current_step += 1
         done = self.current_step >= len(self.data)
         return self._next_observation(), reward, done, {}
+
+def create_environment(filepath, ensemble_models, window_size=10):
+    data = load_data(filepath)
+    return CryptoTradingEnv(data, ensemble_models, window_size)
